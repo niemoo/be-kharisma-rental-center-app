@@ -5,7 +5,7 @@ const response = require('../configs/response.js');
 module.exports = {
   addRolesData: (req, res) => {
     const { name } = req.body;
-    const sql = 'insert into roles (id, name, created_at, updated_at) values (?, ?, ?, ?)';
+    const sql = 'INSERT INTO roles (id, name, created_at, updated_at) VALUES (?, ?, ?, ?)';
 
     if (!name) {
       response(400, '', 'Error: Name is required', res);
@@ -23,7 +23,7 @@ module.exports = {
   addCarsData: (req, res) => {
     const { name, transmission, price_12, price_24, price_fullday } = req.body;
     // const { image } = req.file.filename;
-    const sql = 'insert into cars (name, transmission, image, price_12, price_24, price_fullday, created_at, modified_at) values (?, ?, ?, ?, ?, ?, ?, ?)';
+    const sql = 'INSERT INTO cars (name, transmission, image, price_12, price_24, price_fullday, created_at, modified_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
 
     if (!req.file) {
       const err = new Error('Image Harus di Upload');
@@ -42,7 +42,7 @@ module.exports = {
     // res.send(image);
   },
   getCarsData: (req, res) => {
-    const sql = 'select * from cars';
+    const sql = 'SELECT * FROM cars';
 
     db.query(sql, (err, result) => {
       if (err) {
