@@ -26,6 +26,7 @@ const upload = multer({
 });
 
 router.get('/cars', admin.getCarsData);
+router.get('/users', admin.getUsersData);
 router.post('/register', auth.registerUser);
 router.post('/login', auth.loginUser);
 router.post('/admin/roles', admin.addRolesData);
