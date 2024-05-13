@@ -33,9 +33,9 @@ module.exports = {
 
           // Check if email or username already exists
           if (emailCount > 0) {
-            response(404, null, 'Email already exists', res);
+            response(404, {}, 'Email already exists', res);
           } else if (usernameCount > 0) {
-            response(404, null, 'Username already exists', res);
+            response(404, {}, 'Username already exists', res);
           } else {
             const getRoleId = 'SELECT * FROM roles WHERE name = "user"';
 
@@ -60,7 +60,7 @@ module.exports = {
         });
       });
     } catch (err) {
-      response(500, null, err.message, res);
+      response(500, {}, err.message, res);
     }
   },
   loginUser: async (req, res) => {
@@ -74,21 +74,20 @@ module.exports = {
           throw err;
         }
 
-        const token = signToken(result[0].id);
-
-        if (result == 0) {
-          response(404, null, 'Username not found', res);
-        } else {
+        if (result && result.length > 0) {
+          const token = signToken(result[0].id);
           const passwordMatch = await bcrypt.compareSync(password, result[0].password);
           if (passwordMatch) {
             response(200, { result, token }, 'Login success', res);
           } else {
-            response(404, null, 'Incorrect password', res);
+            response(404, {}, 'Incorrect password', res);
           }
+        } else {
+          response(404, {}, 'Username not found', res);
         }
       });
     } catch (err) {
-      response(500, null, err.message, res);
+      response(500, {}, err.message, res);
     }
   },
 };
