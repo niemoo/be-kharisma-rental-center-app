@@ -2,6 +2,7 @@ const router = require('express').Router();
 const multer = require('multer');
 const { admin } = require('../controllers/index-control');
 const { auth } = require('../controllers/index-control');
+const authMiddleware = require('../middleware/user-middleware');
 
 const fileStorage = multer.diskStorage({
   destination: (req, file, callback) => {
@@ -25,7 +26,7 @@ const upload = multer({
   fileFilter: fileFilter,
 });
 
-router.get('/cars', admin.getCarsData);
+router.get('/cars', authMiddleware, admin.getCarsData);
 router.get('/users', admin.getUsersData);
 router.post('/register', auth.registerUser);
 router.post('/login', auth.loginUser);
