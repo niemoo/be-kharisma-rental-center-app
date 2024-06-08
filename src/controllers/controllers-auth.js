@@ -67,23 +67,54 @@ module.exports = {
     try {
       const { username, password } = req.body;
 
-      const sql = 'select * from users where username = ?';
+      const checkAdmin = 'select * from admin where username = ?';
 
-      db.query(sql, [username], async (err, result) => {
+      db.query(checkAdmin, [username], (err, adminResult) => {
         if (err) {
           throw err;
         }
 
-        if (result && result.length > 0) {
-          const token = signToken(result[0].id);
-          const passwordMatch = await bcrypt.compareSync(password, result[0].password);
-          if (passwordMatch) {
-            response(200, { result, token }, 'Login success', res);
-          } else {
-            response(404, {}, 'Incorrect password', res);
-          }
+        if (adminResult && adminResult.length > 0) {
+          // If the username exists in the admin table, check the role_id
+          const roleSql = 'SELECT * FROM roles WHERE id = ? AND name = ?';
+          db.query(roleSql, [adminResult[0].role_id, 'admin'], (roleErr, roleResult) => {
+            if (roleErr) {
+              throw roleErr;
+            }
+
+            if (roleResult && roleResult.length > 0) {
+              // If role_id matches 'admin', check the password
+              const passwordMatch = password === adminResult[0].password;
+              if (passwordMatch) {
+                const token = signToken(adminResult[0].id);
+                response(200, { adminResult, token }, 'Login success as admin', res);
+              } else {
+                response(404, {}, 'Incorrect password for admin', res);
+              }
+            } else {
+              response(404, {}, 'Role not found or not admin', res);
+            }
+          });
         } else {
-          response(404, {}, 'Username not found', res);
+          const checkUser = 'select * from users where username = ?';
+
+          db.query(checkUser, [username], async (err, userResult) => {
+            if (err) {
+              throw err;
+            }
+
+            if (userResult && userResult.length > 0) {
+              const token = signToken(userResult[0].id);
+              const passwordMatch = await bcrypt.compareSync(password, userResult[0].password);
+              if (passwordMatch) {
+                response(200, { userResult, token }, 'Login success as a user', res);
+              } else {
+                response(404, {}, 'Incorrect password for user', res);
+              }
+            } else {
+              response(404, {}, 'Username not found', res);
+            }
+          });
         }
       });
     } catch (err) {

@@ -9,7 +9,6 @@ module.exports = {
 
     if (!name) {
       response(400, '', 'Error: Name is required', res);
-      return res.status(400).send({ error: 'Name is required.' });
     }
 
     db.query(sql, [uuidv4(), name, new Date().toISOString(), new Date().toISOString()], (err, result) => {
@@ -18,6 +17,31 @@ module.exports = {
       }
 
       response(201, result, 'Successfully added roles', res);
+    });
+  },
+  addAdminData: (req, res) => {
+    const { username, password } = req.body;
+    const sql = 'INSERT INTO admin (id, role_id, username, password, created_at, modified_at) VALUES (?, ?, ?, ?, ?, ?)';
+    const getRoleId = 'SELECT * FROM roles WHERE name = "admin"';
+
+    if (!username) {
+      response(400, '', 'Error: Name is required', res);
+    }
+
+    db.query(getRoleId, (err, roleResult) => {
+      if (err) {
+        throw err;
+      }
+
+      const role_id = roleResult[0].id;
+
+      db.query(sql, [uuidv4(), role_id, username, password, new Date().toISOString(), new Date().toISOString()], (err, result) => {
+        if (err) {
+          response(500, err, err.message, res);
+        }
+
+        response(201, result, 'Successfully added admin data', res);
+      });
     });
   },
   addCarsData: (req, res) => {
@@ -40,18 +64,7 @@ module.exports = {
 
     // res.send(image);
   },
-  getCarsData: (req, res) => {
-    const sql = 'SELECT * FROM cars';
-
-    db.query(sql, (err, result) => {
-      if (err) {
-        response(500, err, err.message, res);
-      }
-
-      response(200, result, 'Successfully get cars data', res);
-    });
-  },
-  getUsersData: (req, res) => {
+  getAllUsersData: (req, res) => {
     const sql = 'SELECT * FROM users';
 
     db.query(sql, (err, result) => {

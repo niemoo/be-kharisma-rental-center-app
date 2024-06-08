@@ -2,7 +2,9 @@ const router = require('express').Router();
 const multer = require('multer');
 const { admin } = require('../controllers/index-control');
 const { auth } = require('../controllers/index-control');
-const authMiddleware = require('../middleware/user-middleware');
+const { app } = require('../controllers/index-control');
+const userAuthMiddleware = require('../middleware/user-middleware');
+const adminAuthMiddleware = require('../middleware/admin-middleware');
 
 const fileStorage = multer.diskStorage({
   destination: (req, file, callback) => {
@@ -26,12 +28,19 @@ const upload = multer({
   fileFilter: fileFilter,
 });
 
-router.get('/cars', authMiddleware, admin.getCarsData);
-router.get('/users', admin.getUsersData);
+// APP
+router.get('/cars', app.getAllCarsData);
+router.get('/cars/:id', app.getSpecifiedCarData);
+
+// AUTH
 router.post('/register', auth.registerUser);
 router.post('/login', auth.loginUser);
-router.post('/admin/roles', admin.addRolesData);
-router.post('/admin/cars', upload.single('image'), admin.addCarsData);
-router.patch('/admin/cars/edit', upload.single('image'), admin.editCarsData);
+
+// ADMIN
+router.get('/users', adminAuthMiddleware, admin.getAllUsersData);
+router.post('/admin', adminAuthMiddleware, admin.addAdminData);
+router.post('/admin/roles', adminAuthMiddleware, admin.addRolesData);
+router.post('/admin/cars', adminAuthMiddleware, upload.single('image'), admin.addCarsData);
+router.patch('/admin/cars/edit', adminAuthMiddleware, upload.single('image'), admin.editCarsData);
 
 module.exports = router;

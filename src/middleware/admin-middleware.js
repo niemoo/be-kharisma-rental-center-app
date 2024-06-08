@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const db = require('../configs/database.js');
 
-async function userAuthMiddleware(req, res, next) {
+async function adminAuthMiddleware(req, res, next) {
   let token, decoded;
 
   // TO CHECK THERE IS A TOKEN OR NOT IN THE HEADER
@@ -31,7 +31,7 @@ async function userAuthMiddleware(req, res, next) {
   }
 
   // GET USER DATA BY DECODED CONDITION
-  const sql = 'select * from users where id = ?';
+  const sql = 'select * from admin where id = ?';
 
   db.query(sql, [decoded.id], (err, result) => {
     if (err) {
@@ -41,7 +41,7 @@ async function userAuthMiddleware(req, res, next) {
     if (result.length === 0) {
       return res.status(401).json({
         status: 401,
-        message: 'User does not exist, the token is invalid',
+        message: 'Admin does not exist, the token is invalid',
       });
     }
 
@@ -53,4 +53,4 @@ async function userAuthMiddleware(req, res, next) {
   });
 }
 
-module.exports = userAuthMiddleware;
+module.exports = adminAuthMiddleware;
