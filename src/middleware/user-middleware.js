@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const db = require('../configs/database.js');
 
-async function userAuthMiddleware(req, res, next) {
+function userAuthMiddleware(req, res, next) {
   let token, decoded;
 
   // TO CHECK THERE IS A TOKEN OR NOT IN THE HEADER
@@ -20,7 +20,7 @@ async function userAuthMiddleware(req, res, next) {
 
   // TO DECODE VERIFICATION TOKEN
   try {
-    decoded = await jwt.verify(token, process.env.JWT_SECRET);
+    decoded = jwt.verify(token, process.env.JWT_SIGN_TOKEN_SECRET);
   } catch (err) {
     return next(
       res.status(401).json({

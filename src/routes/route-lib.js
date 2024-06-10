@@ -29,12 +29,13 @@ const upload = multer({
 });
 
 // APP
-router.get('/cars', app.getAllCarsData);
+router.get('/cars', userAuthMiddleware, app.getAllCarsData);
 router.get('/cars/:id', app.getSpecifiedCarData);
 
 // AUTH
 router.post('/register', auth.registerUser);
 router.post('/login', auth.loginUser);
+router.get('/token', auth.refreshToken);
 
 // ADMIN
 router.get('/users', adminAuthMiddleware, admin.getAllUsersData);
