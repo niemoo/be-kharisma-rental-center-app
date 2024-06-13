@@ -31,6 +31,7 @@ const upload = multer({
 // APP
 router.get('/cars', userAuthMiddleware, app.getAllCarsData);
 router.get('/cars/:id', app.getSpecifiedCarData);
+router.post('/order', app.addNewOrder);
 
 // AUTH
 router.post('/register', auth.registerUser);

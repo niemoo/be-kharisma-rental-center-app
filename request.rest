@@ -1,5 +1,8 @@
 GET  http://localhost:3001/cars
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjNiODFmYWM1LWRhODEtNGE4Zi1iMTM1LThlOGIzMWQzMDFiNCIsImlhdCI6MTcxODAwNzIxNywiZXhwIjoxNzE4MDA3Mjc3fQ.PT4bjBk8g-vtzYk3UX4OySo2WILQ5Y8bTsZJnYX0TnM
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwiaWF0IjoxNzE4MTkyMjcxLCJleHAiOjE3MTgxOTIzMzF9.aD77-KNTs6Jp_g8aWispQm3qU_0oGZph6l8EFTCRi_4
+
+###
+GET  http://localhost:3001/token
 
 ###
 POST http://localhost:3001/login

@@ -1,5 +1,5 @@
-const { v4: uuidv4 } = require('uuid');
-const bcrypt = require('bcrypt');
+// const { v4: uuidv4 } = require('uuid');
+// const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../configs/database.js');
 const response = require('../configs/response.js');
@@ -14,45 +14,34 @@ const addRefreshToken = (id) => {
 module.exports = {
   registerUser: async (req, res) => {
     try {
-      const { email, username, password, first_name, last_name, no_telp } = req.body;
-      const salt = await bcrypt.genSaltSync(10);
-      const encryptedPassword = await bcrypt.hashSync(password, salt);
+      const { username, password, full_name, no_telp } = req.body;
 
-      const checkEmailQuery = 'SELECT COUNT(*) AS emailCount FROM users WHERE email = ?';
       const checkUsernameQuery = 'SELECT COUNT(*) AS usernameCount FROM users WHERE username = ?';
 
-      db.query(checkEmailQuery, [email], (emailErr, checkEmailResult) => {
-        if (emailErr) throw emailErr;
+      db.query(checkUsernameQuery, [username], (usernameErr, checkUsernameResult) => {
+        if (usernameErr) throw usernameErr;
 
-        db.query(checkUsernameQuery, [username], (usernameErr, checkUsernameResult) => {
-          if (usernameErr) throw usernameErr;
+        const usernameCount = checkUsernameResult[0].usernameCount;
 
-          const emailCount = checkEmailResult[0].emailCount;
-          const usernameCount = checkUsernameResult[0].usernameCount;
+        if (usernameCount > 0) {
+          response(404, {}, 'Username tersebut sudah digunakan. Mohon gunakan username lain.', res);
+        } else {
+          const getRoleId = 'SELECT * FROM roles WHERE name = "user"';
 
-          // Check if email or username already exists
-          if (emailCount > 0) {
-            response(404, {}, 'Email already exists', res);
-          } else if (usernameCount > 0) {
-            response(404, {}, 'Username already exists', res);
-          } else {
-            const getRoleId = 'SELECT * FROM roles WHERE name = "user"';
+          db.query(getRoleId, (err, roleResult) => {
+            if (err) throw err;
 
-            db.query(getRoleId, (err, roleResult) => {
+            const role_id = roleResult[0].id;
+
+            const sql = 'INSERT INTO users (username, password, full_name, role_id, no_telp, created_at, modified_at) VALUES (?, ?, ?, ?, ?, ?, ?)';
+
+            db.query(sql, [username, password, full_name, role_id, no_telp, new Date().toISOString(), new Date().toISOString()], (err, result) => {
               if (err) throw err;
 
-              const role_id = roleResult[0].id;
-
-              const sql = 'INSERT INTO users (id, email, username, password, first_name, last_name, role_id, no_telp, created_at, modified_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-
-              db.query(sql, [uuidv4(), email, username, encryptedPassword, first_name, last_name, role_id, no_telp, new Date().toISOString(), new Date().toISOString()], (err, result) => {
-                if (err) throw err;
-
-                response(201, result, 'Successfully added new user data', res);
-              });
+              response(201, result, 'Successfully added new user data', res);
             });
-          }
-        });
+          });
+        }
       });
     } catch (err) {
       response(500, {}, err.message, res);
@@ -97,23 +86,25 @@ module.exports = {
 
             if (userResult && userResult.length > 0) {
               const accessToken = addSignToken(userResult[0].id);
-              const passwordMatch = bcrypt.compareSync(password, userResult[0].password);
+              const passwordMatch = password === userResult[0].password;
               if (passwordMatch) {
                 const refreshToken = addRefreshToken(userResult[0].id);
                 db.query(updateRefreshToken, [refreshToken, username], (err, updateRefreshTokenResult) => {
                   if (err) throw err;
 
-                  res.cookie('refreshToken', refreshToken, {
-                    httpOnly: true,
-                    maxAge: 24 * 60 * 60 * 1000,
-                  });
-                  response(200, { userId: { id: userResult[0].id, username: userResult[0].username }, accessToken }, 'Login success as a user', res);
+                  // res.clearCookie('refreshToken', refreshToken, {
+                  //   httpOnly: true, // ini memastikan cookie tidak dapat diakses melalui JavaScript di klien
+                  //   maxAge: 24 * 60 * 60 * 1000, // contoh: ini akan mengatur cookie agar kadaluarsa dalam 24 jam
+                  // });
+                  // res.clearCookie('refreshToken', { path: '/' });
+
+                  response(200, { user: { id: userResult[0].id, username: userResult[0].username }, accessToken, refreshToken }, 'Login success as a user', res);
                 });
               } else {
-                response(404, {}, 'Incorrect password for user', res);
+                response(404, {}, 'Password yang anda masukkan salah.', res);
               }
             } else {
-              response(404, {}, 'Username not found', res);
+              response(404, {}, 'Username tidak ditemukan.', res);
             }
           });
         }
@@ -130,7 +121,7 @@ module.exports = {
       if (!refreshToken) response(401, {}, 'Unathorized', res);
 
       db.query(sql, [refreshToken], (err, result) => {
-        if (!user[0]) response(403, {}, 'Forbidden', res);
+        if (!result[0]) response(403, {}, 'Forbidden', res);
 
         jwt.verify(refreshToken, process.env.JWT_REFRESH_TOKEN_SECRET, (err, decoded) => {
           if (err) response(403, {}, 'Forbidden', res);
