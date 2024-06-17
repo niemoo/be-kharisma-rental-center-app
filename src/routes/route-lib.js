@@ -3,6 +3,7 @@ const multer = require('multer');
 const { admin } = require('../controllers/index-control');
 const { auth } = require('../controllers/index-control');
 const { app } = require('../controllers/index-control');
+const appMiddleware = require('../middleware/app-middleware');
 const userAuthMiddleware = require('../middleware/user-middleware');
 const adminAuthMiddleware = require('../middleware/admin-middleware');
 
@@ -29,9 +30,9 @@ const upload = multer({
 });
 
 // APP
-router.get('/cars', userAuthMiddleware, app.getAllCarsData);
+router.get('/cars', app.getAllCarsData);
 router.get('/cars/:id', app.getSpecifiedCarData);
-router.post('/order', app.addNewOrder);
+router.post('/booking', app.addNewBooking);
 
 // AUTH
 router.post('/register', auth.registerUser);
@@ -41,8 +42,9 @@ router.get('/token', auth.refreshToken);
 // ADMIN
 router.get('/users', adminAuthMiddleware, admin.getAllUsersData);
 router.post('/admin', adminAuthMiddleware, admin.addAdminData);
-router.post('/admin/roles', adminAuthMiddleware, admin.addRolesData);
-router.post('/admin/cars', adminAuthMiddleware, upload.single('image'), admin.addCarsData);
+router.post('/admin/roles', admin.addRolesData);
+router.post('/admin/cars', upload.single('image'), admin.addCarsData);
+router.post('/admin/cars/category', admin.addCarsCategoryData);
 router.patch('/admin/cars/edit', adminAuthMiddleware, upload.single('image'), admin.editCarsData);
 
 module.exports = router;

@@ -4,11 +4,8 @@ const jwt = require('jsonwebtoken');
 const db = require('../configs/database.js');
 const response = require('../configs/response.js');
 
-const addSignToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SIGN_TOKEN_SECRET, { expiresIn: process.env.JWT_SIGN_EXPIRES_IN });
-};
-const addRefreshToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_REFRESH_TOKEN_SECRET, { expiresIn: process.env.JWT_REFRESH_EXPIRES_IN });
+const addAccessToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_TOKEN_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
 };
 
 module.exports = {
@@ -26,16 +23,16 @@ module.exports = {
         if (usernameCount > 0) {
           response(404, {}, 'Username tersebut sudah digunakan. Mohon gunakan username lain.', res);
         } else {
-          const getRoleId = 'SELECT * FROM roles WHERE name = "user"';
+          const getRoleId = 'SELECT * FROM roles WHERE id = 2';
 
           db.query(getRoleId, (err, roleResult) => {
             if (err) throw err;
 
             const role_id = roleResult[0].id;
 
-            const sql = 'INSERT INTO users (username, password, full_name, role_id, no_telp, created_at, modified_at) VALUES (?, ?, ?, ?, ?, ?, ?)';
+            const sql = 'INSERT INTO users (role_id, username, password, full_name, no_telp, created_at, modified_at) VALUES (?, ?, ?, ?, ?, ?, ?)';
 
-            db.query(sql, [username, password, full_name, role_id, no_telp, new Date().toISOString(), new Date().toISOString()], (err, result) => {
+            db.query(sql, [role_id, username, password, full_name, no_telp, new Date().toISOString().slice(0, 19).replace('T', ' '), new Date().toISOString().slice(0, 19).replace('T', ' ')], (err, result) => {
               if (err) throw err;
 
               response(201, result, 'Successfully added new user data', res);
@@ -79,27 +76,15 @@ module.exports = {
           });
         } else {
           const checkUser = 'SELECT * FROM users WHERE username = ?';
-          const updateRefreshToken = 'UPDATE users SET refresh_token = ? WHERE username = ?';
 
           db.query(checkUser, [username], (err, userResult) => {
             if (err) throw err;
 
             if (userResult && userResult.length > 0) {
-              const accessToken = addSignToken(userResult[0].id);
+              const accessToken = addAccessToken(userResult[0].id);
               const passwordMatch = password === userResult[0].password;
               if (passwordMatch) {
-                const refreshToken = addRefreshToken(userResult[0].id);
-                db.query(updateRefreshToken, [refreshToken, username], (err, updateRefreshTokenResult) => {
-                  if (err) throw err;
-
-                  // res.clearCookie('refreshToken', refreshToken, {
-                  //   httpOnly: true, // ini memastikan cookie tidak dapat diakses melalui JavaScript di klien
-                  //   maxAge: 24 * 60 * 60 * 1000, // contoh: ini akan mengatur cookie agar kadaluarsa dalam 24 jam
-                  // });
-                  // res.clearCookie('refreshToken', { path: '/' });
-
-                  response(200, { user: { id: userResult[0].id, username: userResult[0].username }, accessToken, refreshToken }, 'Login success as a user', res);
-                });
+                response(200, { user: { id: userResult[0].id, username: userResult[0].username }, accessToken }, 'Login success as a user', res);
               } else {
                 response(404, {}, 'Password yang anda masukkan salah.', res);
               }
