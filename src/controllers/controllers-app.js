@@ -54,4 +54,20 @@ module.exports = {
       response(500, {}, err.message, res);
     }
   },
+  getInvoiceData: (req, res) => {
+    try {
+      const { booking_id } = req.params;
+
+      const sql =
+        'SELECT bookings.id AS booking_id, users.username, cars.name AS car_name, booking_details.total_price, booking_details.start_date, booking_details.end_date, booking_details.start_time, booking_details.end_time, booking_details.status FROM bookings JOIN users AS users ON bookings.user_id = users.id JOIN cars AS cars ON bookings.car_id = cars.id JOIN booking_details AS booking_details ON bookings.id = booking_details.booking_id WHERE bookings.id = ?;';
+
+      db.query(sql, [booking_id], (err, result) => {
+        if (err) throw err;
+
+        response(200, result, `Successfully get invoice where booking id = ${booking_id}`, res);
+      });
+    } catch (err) {
+      response(500, {}, err.message, res);
+    }
+  },
 };

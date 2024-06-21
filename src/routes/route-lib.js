@@ -32,6 +32,7 @@ const upload = multer({
 // APP
 router.get('/cars', app.getAllCarsData);
 router.get('/cars/:id', app.getSpecifiedCarData);
+router.get('/invoice/:booking_id', app.getInvoiceData);
 router.post('/booking', app.addNewBooking);
 
 // AUTH
